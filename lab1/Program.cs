@@ -109,7 +109,6 @@ namespace lab1
                     numC = Convert.ToInt32(reader_C.ReadLine());
                     if (numC < prevNumC)
                     {
-
                         do
                         {
                             writer_A.WriteLine(numB);
@@ -125,7 +124,6 @@ namespace lab1
                     numB = Convert.ToInt32(reader_B.ReadLine());
                     if(numB < prevNumB)
                     {
-
                         do
                         {
                             writer_A.WriteLine(numC);
@@ -135,10 +133,10 @@ namespace lab1
                     }
                 }
             }
+            writer_A.WriteLine(Math.Min(numB, numC));
+            writer_A.WriteLine(Math.Max(numB, numC));
             if (reader_B.EndOfStream)
             {
-                writer_A.WriteLine(Math.Min(numB, numC));
-                writer_A.WriteLine(Math.Max(numB, numC));
                 while (!reader_C.EndOfStream)
                 {
                     writer_A.WriteLine(Convert.ToInt32(reader_C.ReadLine()));
@@ -146,11 +144,8 @@ namespace lab1
             }
             else
             {
-                writer_A.WriteLine(Math.Min(numB, numC));
-                writer_A.WriteLine(Math.Max(numB, numC));
                 while (!reader_B.EndOfStream)
                 {
-
                     writer_A.WriteLine(Convert.ToInt32(reader_B.ReadLine()));
                 }
             }
