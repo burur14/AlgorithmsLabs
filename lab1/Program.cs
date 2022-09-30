@@ -14,7 +14,7 @@ namespace lab1
             DateTime time = DateTime.Now;
             adaptiveSort(path);
             DateTime time2 = DateTime.Now;
-            Console.WriteLine(time2.Subtract(time).Minutes);
+            Console.WriteLine(time2.Subtract(time).Minutes + "minutes");
         }
 
         static void adaptiveSort(string path)
@@ -23,48 +23,47 @@ namespace lab1
             while (!isSorted(path))
             {
                 StreamReader A_reader = new StreamReader(path);
-                File.WriteAllText("B.txt", String.Empty);
-                File.WriteAllText("C.txt", String.Empty);
-                while (!A_reader.EndOfStream)
-                {
-                    splitInTwoFiles(path, A_reader);
-                }
+                File.WriteAllText("B.txt", "");
+                File.WriteAllText("C.txt", "");
+                
+                splitInTwoFiles(A_reader);
                 A_reader.Close();
-                var series_B = findSeries("B.txt");
-                var series_C = findSeries("C.txt");
-
-                mergeSeries(series_B, series_C, path);
+                merge("A.txt", "B.txt", "C.txt");
             }
 
         }
 
-        static void splitInTwoFiles(string path, StreamReader A_reader)
+        static void splitInTwoFiles(StreamReader A_reader)
         {
 
-
-            List<string> series = new List<string>();
-           
-            string line = buffLine;
-            if(line == null) { line = A_reader.ReadLine(); }
-            series.Add(line);
-            
-
-            while (true)
+            while (!A_reader.EndOfStream)
             {
-                string prevLine = line;
-                line = A_reader.ReadLine();
-                if(Convert.ToInt32(prevLine) <= Convert.ToInt32(line))
-                {
-                    series.Add(line);
-                }
-                else
-                {
-                    buffLine = line;
-                    break;
-                }
+                List<string> series = new List<string>();
 
+                string line = buffLine;
+                if (line == null) { line = A_reader.ReadLine(); }
+                series.Add(line);
+
+
+                while (!A_reader.EndOfStream)
+                {
+                    string prevLine = line;
+                    line = A_reader.ReadLine();
+                    int lineInt = Convert.ToInt32(line);
+                    int prevLineInt = Convert.ToInt32(prevLine);
+                    if (prevLineInt <= lineInt)
+                    {
+                        series.Add(line);
+                    }
+                    else
+                    {
+                        buffLine = line;
+                        break;
+                    }
+
+                }
+                writeToFile(series);
             }
-            writeToFile(series);
         }
 
         static void writeToFile(List<string> series)
@@ -92,91 +91,73 @@ namespace lab1
             counter++;
         }
 
-        static List<List<int>> findSeries(string path)
+        static void merge(string pathA, string pathB, string pathC)
         {
-            var series = new List<List<int>>();
-            var reader = new StreamReader(path);
-            int i = 0;
-
-            string line = reader.ReadLine();
-            series.Add(new List<int>());
-            series[0].Add(Convert.ToInt32(line));
-            string prevLine = line;
-            while ((line = reader.ReadLine()) != null)
+            StreamReader reader_B = new StreamReader(pathB);
+            StreamReader reader_C = new StreamReader(pathC);
+            StreamWriter writer_A = new StreamWriter(pathA);
+            int prevNumC, prevNumB;
+            int numB = Convert.ToInt32(reader_B.ReadLine());
+            int numC = Convert.ToInt32(reader_C.ReadLine());
+            while (!reader_B.EndOfStream && !reader_C.EndOfStream)
             {
-                if (Convert.ToInt32(prevLine) > Convert.ToInt32(line))
+                
+                if(numB > numC)
                 {
-                    series.Add(new List<int>());
-                    i++;
-                }
-                series[i].Add(Convert.ToInt32(line));
-                prevLine = line;
-            }
-
-            reader.Close();
-            return series;
-
-
-        }
-
-        static void mergeSeries(List<List<int>> series_B, List<List<int>> series_C, string path)
-        {
-            StreamWriter writer = new StreamWriter(path);
-            
-            for(int i = 0;i < Math.Min(series_B.Count, series_C.Count); i++)
-            {
-                int j = 0, k = 0;
-                while(j < series_C[i].Count && k < series_B[i].Count)
-                {
-                    if(series_C[i][j] > series_B[i][k])
+                    writer_A.WriteLine(numC);
+                    prevNumC = numC;
+                    numC = Convert.ToInt32(reader_C.ReadLine());
+                    if (numC < prevNumC)
                     {
-                        writer.WriteLine(series_B[i][k]);
-                        k++;
-                    }
-                    else
-                    {
-                        writer.WriteLine(series_C[i][j]);
-                        j++;
-                    }
-                }
-                if (k == series_B[i].Count)
-                {
-                    while (j < series_C[i].Count)
-                    {
-                        writer.WriteLine(series_C[i][j]);
-                        j++;
+
+                        do
+                        {
+                            writer_A.WriteLine(numB);
+                            prevNumB = numB;
+                            numB = Convert.ToInt32(reader_B.ReadLine());
+                        } while (numB >= prevNumB);
                     }
                 }
                 else
                 {
-                    while (k < series_B[i].Count)
+                    writer_A.WriteLine(numB);
+                    prevNumB = numB;
+                    numB = Convert.ToInt32(reader_B.ReadLine());
+                    if(numB < prevNumB)
                     {
-                        writer.WriteLine(series_B[i][k]);
-                        k++;
+
+                        do
+                        {
+                            writer_A.WriteLine(numC);
+                            prevNumC = numC;
+                            numC = Convert.ToInt32(reader_C.ReadLine());
+                        } while (numC >= prevNumC);
                     }
                 }
             }
-            if(series_B.Count > series_C.Count)
+            if (reader_B.EndOfStream)
             {
-                for(int i = series_C.Count;i < series_B.Count; i++)
+                writer_A.WriteLine(Math.Min(numB, numC));
+                writer_A.WriteLine(Math.Max(numB, numC));
+                while (!reader_C.EndOfStream)
                 {
-                    for(int j = 0;j < series_B[i].Count; j++)
-                    {
-                        writer.WriteLine(series_B[i][j]);
-                    }
-                }
-            }else if (series_B.Count < series_C.Count)
-            {
-                for (int i = series_B.Count; i < series_C.Count; i++)
-                {
-                    for (int j = 0; j < series_C[i].Count; j++)
-                    {
-                        writer.WriteLine(series_C[i][j]);
-                    }
+                    writer_A.WriteLine(Convert.ToInt32(reader_C.ReadLine()));
                 }
             }
-            writer.Flush();
-            writer.Close();
+            else
+            {
+                writer_A.WriteLine(Math.Min(numB, numC));
+                writer_A.WriteLine(Math.Max(numB, numC));
+                while (!reader_B.EndOfStream)
+                {
+
+                    writer_A.WriteLine(Convert.ToInt32(reader_B.ReadLine()));
+                }
+            }
+            reader_B.Close();
+            reader_C.Close();
+            writer_A.Flush();
+            writer_A.Close();
         }
 
         static bool isSorted(string path)
