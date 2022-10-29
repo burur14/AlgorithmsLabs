@@ -8,48 +8,60 @@ namespace lab2
     class Program
     {
         static int limit = 10;
-        /*public static int[] glukhiyKut = new int[20];
-        public static int[] iterations = new int[20];
-        public static int[] totalStates = new int[20];
-        public static int[] statesInMemory = new int[20];*/
 
         static void Main(string[] args)
         {
-            for (int i = 0; i < 20; ++i)
-            {
-                State state = new State(generateBoard());
-                printBoard(state.Board);
-                var time1 = DateTime.Now;
-                var res = RBFS(state, 30, 0);
-                var time2 = DateTime.Now;
-                Console.WriteLine("Solution found in " + time2.Subtract(time1).TotalSeconds + " Seconds");
-               // Console.WriteLine(iterations[i] + " " + glukhiyKut[i] + " " + totalStates[i] + " " + statesInMemory[i]+ "\n");
-            }
             
-            
+            State state = new State(generateBoard());
+            printBoard(state.Board);
+            var time1 = DateTime.Now;
+            var res = RBFS(state, 30, 0);
+            var time2 = DateTime.Now;
+            printBoard(res.Value.Board);
+            Console.WriteLine("RBFS Solution found in " + time2.Subtract(time1).TotalSeconds + " Seconds");
+
+            time1 = DateTime.Now;
+            res = LDFS(state, 0, 0);
+            time2 = DateTime.Now;
+            printBoard(res.Value.Board);
+            Console.WriteLine("LDFS Solution found in " + time2.Subtract(time1).TotalSeconds + " Seconds");
+
+
+
+
         }
 
-        static void LDFS()
+
+        static Optional<State> LDFS(State state, int currLine, int depth)
         {
-
-            State startState = new State(generateBoard());
-            printBoard(startState.Board);
-
-            var time1 = DateTime.Now;
-            var result = DLS(startState, 0);
-            var time2 = DateTime.Now;
-
-            if (result.HasValue)
+            if(depth == limit || currLine > 7)
             {
-                var solution = result.Value;
-                Console.WriteLine("\nSolution found: ");
-                printBoard(solution.Board);
+                if (isSolved(state.Board))
+                {
+                    return new Optional<State>(state);
+                }
+                else
+                {
+                    return new Optional<State>();
+                }
             }
-            else
+
+            var result = LDFS(state, currLine + 1, depth);
+
+            if (result.HasValue) return result;
+            
+            for(int i = 0; i < 8; ++i)
             {
-                Console.WriteLine("Solution not found;\tIncrease the limit");
+                if(i != state.Board[currLine])
+                {
+                    var newState = new State(state.Board);
+                    newState.Board[currLine] = (byte) i;
+                    result = LDFS(newState, currLine + 1, depth + 1);
+                    if (result.HasValue) return result;
+                }
             }
-            Console.WriteLine(time2.Subtract(time1).TotalSeconds + " seconds");
+            return new Optional<State>();
+
         }
 
         static Optional<State> RBFS(State state, int f_limit, int depth)
@@ -57,16 +69,13 @@ namespace lab2
 
             if (isSolved(state.Board))
             {
-                //statesInMemory[num] = depth + 55;
                 return new Optional<State>(state);
             }
             if (depth >= limit)
             {
-                //glukhiyKut[num]++;
                 return new Optional<State>();
             }
             List<State> childStates = state.expandState();
-            //totalStates[num] += 56;
             var f = new List<int>();
             for(int i = 0;i < childStates.Count; ++i)
             {
@@ -74,14 +83,12 @@ namespace lab2
             }
             while (true)
             {
-                //iterations[num]++;
                 int bestValue = f.Min();
                 int bestIndex = f.IndexOf(f.Min());
                 State bestState = childStates[bestIndex];
                 
                 if (bestValue > f_limit)
                 {
-                    //glukhiyKut[num]++;
                     return new Optional<State>();
                 }
                 childStates.Remove(bestState);
@@ -124,27 +131,6 @@ namespace lab2
         }
 
       
-        static Optional<State> DLS(State state, int depth)
-        {
-            if (isSolved(state.Board))
-            {
-                return new Optional<State>(state);
-            }
-            if (depth == limit)
-            {
-                return new Optional<State>();
-
-            }
-            for(int i = 0;i < 8; ++i)
-            {
-                state.Board[i] = (byte)(state.Board[i] == 0 ? 7 : state.Board[i] - 1);
-                if (DLS(state, depth + 1).HasValue) return new Optional<State>(state);
-                state.Board[i] = (byte)(state.Board[i] == 7 ? 0 : state.Board[i] + 1);
-            }
-            return new Optional<State>();
-        }
-        
-
         static byte[] generateBoard()
         {
             byte[] board = new byte[8];
@@ -164,7 +150,7 @@ namespace lab2
                 Console.Write($"{board[i]},");
             }
             Console.WriteLine("]");
-            /*for (int i = 0; i < board.Length; i++)
+            for (int i = 0; i < board.Length; i++)
             {
                 Console.Write("|");
                 for (int j = 0;j < board.Length; j++)
@@ -179,7 +165,7 @@ namespace lab2
                     }
                 }
                 Console.WriteLine();
-            }*/
+            }
             
         }
         static bool isSolved(byte[] board)
