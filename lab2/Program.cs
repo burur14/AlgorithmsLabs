@@ -8,10 +8,10 @@ namespace lab2
     class Program
     {
         static int limit = 10;
-        public static int[] glukhiyKut = new int[20];
+        /*public static int[] glukhiyKut = new int[20];
         public static int[] iterations = new int[20];
         public static int[] totalStates = new int[20];
-        public static int[] statesInMemory = new int[20];
+        public static int[] statesInMemory = new int[20];*/
 
         static void Main(string[] args)
         {
@@ -20,10 +20,10 @@ namespace lab2
                 State state = new State(generateBoard());
                 printBoard(state.Board);
                 var time1 = DateTime.Now;
-                var res = RBFS(state, 30, i);
+                var res = RBFS(state, 30, 0);
                 var time2 = DateTime.Now;
-                Console.WriteLine("\nSolution found in " + time2.Subtract(time1).TotalSeconds + " Seconds");
-                Console.WriteLine(iterations[i] + " " + glukhiyKut[i] + " " + totalStates[i] + " " + statesInMemory[i]+ "\n");
+                Console.WriteLine("Solution found in " + time2.Subtract(time1).TotalSeconds + " Seconds");
+               // Console.WriteLine(iterations[i] + " " + glukhiyKut[i] + " " + totalStates[i] + " " + statesInMemory[i]+ "\n");
             }
             
             
@@ -52,13 +52,21 @@ namespace lab2
             Console.WriteLine(time2.Subtract(time1).TotalSeconds + " seconds");
         }
 
-        static Optional<State> RBFS(State state, int f_limit)
+        static Optional<State> RBFS(State state, int f_limit, int depth)
         {
+
             if (isSolved(state.Board))
             {
+                //statesInMemory[num] = depth + 55;
                 return new Optional<State>(state);
             }
+            if (depth >= limit)
+            {
+                //glukhiyKut[num]++;
+                return new Optional<State>();
+            }
             List<State> childStates = state.expandState();
+            //totalStates[num] += 56;
             var f = new List<int>();
             for(int i = 0;i < childStates.Count; ++i)
             {
@@ -66,19 +74,21 @@ namespace lab2
             }
             while (true)
             {
+                //iterations[num]++;
                 int bestValue = f.Min();
                 int bestIndex = f.IndexOf(f.Min());
                 State bestState = childStates[bestIndex];
                 
                 if (bestValue > f_limit)
                 {
+                    //glukhiyKut[num]++;
                     return new Optional<State>();
                 }
                 childStates.Remove(bestState);
                 f.Remove(bestValue);
 
                 int alt = f.Min();
-                var result = RBFS(bestState, Math.Min(f_limit, alt));
+                var result = RBFS(bestState, Math.Min(f_limit, alt), depth+1);
                 if (result.HasValue)
                 {
                     return result;
